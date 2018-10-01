@@ -17,10 +17,10 @@ struct PointData
 };
 
 
-class PCDBinaryWriter
+class PCDWriter
 {
 public:
-    PCDBinaryWriter();
+    PCDWriter();
 
 
     void storeIntensity(const bool &val);

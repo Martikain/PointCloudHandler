@@ -1,16 +1,16 @@
-#include "pcdbinarywriter.h"
+#include "pcdwriter.h"
 
-PCDBinaryWriter::PCDBinaryWriter()
+PCDWriter::PCDWriter()
 {
 }
 
-void PCDBinaryWriter::storeIntensity(const bool &val)
+void PCDWriter::storeIntensity(const bool &val)
 {
     storeIntensity_ = val;
 }
 
 
-void PCDBinaryWriter::addPoint(const float &x, const float &y,
+void PCDWriter::addPoint(const float &x, const float &y,
                                   const float &z)
 {
     PointData newPoint{x, y, z, 0.0};
@@ -18,7 +18,7 @@ void PCDBinaryWriter::addPoint(const float &x, const float &y,
 }
 
 
-void PCDBinaryWriter::addPoint(const float &x, const float &y,
+void PCDWriter::addPoint(const float &x, const float &y,
                                   const float &z, const float &intensity)
 {
     if ( !storeIntensity_ )
@@ -30,19 +30,19 @@ void PCDBinaryWriter::addPoint(const float &x, const float &y,
 }
 
 
-void PCDBinaryWriter::writeBinary(const QString &filePath)
+void PCDWriter::writeBinary(const QString &filePath)
 {
 
 }
 
 
-void PCDBinaryWriter::writeAscii(const QString &filePath)
+void PCDWriter::writeAscii(const QString &filePath)
 {
 
 }
 
 
-QString PCDBinaryWriter::createPcdHeader(const bool &binary)
+QString PCDWriter::createPcdHeader(const bool &binary)
 {
     QString header = "# .PCD v.7 - Point Cloud Data file format\n";
     header += "VERSION .7\n";
