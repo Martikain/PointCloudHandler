@@ -2,25 +2,31 @@
 #define PCDBINARYWRITER_H
 
 #include <list>
-#include <Eigen/Core>
+#include <QDebug>
 
-union PointXYZ
+struct PointData
 {
-  float data[4];
-  struct StructXYZ
-  {
-    float x;
+    float xOrIntensity;
     float y;
     float z;
-  };
+    float reserved;
 };
+
 
 class PCDBinaryWriter
 {
 public:
     PCDBinaryWriter();
 
-    void binaryWrite();
+
+    void storeIntensity(const bool &val);
+    void binaryWrite(const float &x, const float &y, const float &z);
+    void binaryWrite(const float &x, const float &y,
+                     const float &z, const float &intensity);
+
+    bool intensity_;
+    std::list<PointData> currentPoints_;
+
 };
 
 #endif // PCDBINARYWRITER_H

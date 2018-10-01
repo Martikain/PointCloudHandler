@@ -26,4 +26,3 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     pcdbinarywriter.h
 
-INCLUDEPATH += $$(HOME)/eigen3
