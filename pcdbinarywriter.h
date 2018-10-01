@@ -3,6 +3,10 @@
 
 #include <list>
 #include <QDebug>
+#include <QDataStream>
+#include <QString>
+#include <QFile>
+#include <QDir>
 
 struct PointData
 {
@@ -20,13 +24,19 @@ public:
 
 
     void storeIntensity(const bool &val);
-    void binaryWrite(const float &x, const float &y, const float &z);
-    void binaryWrite(const float &x, const float &y,
+    void addPoint(const float &x, const float &y, const float &z);
+    void addPoint(const float &x, const float &y,
                      const float &z, const float &intensity);
 
-    bool intensity_;
+    void writeBinary(const QString &filePath);
+    void writeAscii(const QString &filePath);
+
+private:
+
+    bool storeIntensity_;
     std::list<PointData> currentPoints_;
 
+    QString createPcdHeader(const bool &binary);
 };
 
 #endif // PCDBINARYWRITER_H
