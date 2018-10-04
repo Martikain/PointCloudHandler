@@ -4,9 +4,16 @@
 #define DEFAULT_INTENSITY 100.0
 
 #include <QDebug>
+#include <string>
+#include <QString>
+#include <QFile>
+#include <QTextStream>
+#include <QStringList>
 #include <pcl/point_types.h>
 #include <pcl/io/io.h>
 #include <pcl/io/pcd_io.h>
+
+enum FileType{ASCII = 0, binary = 1};
 
 class PCDWriter
 {
@@ -35,6 +42,13 @@ public:
     // Creates an ASCII format PCD file
     void writeAscii(const QString &filePath);
 
+    // Converts a delimited file into PCD format.
+    // If intensityId is given, this will search for intensity values
+    // from the column with the first row value intensityId
+    bool convertToPCD(const QString &filePath, const char &delim,
+                      const QString &newPath, const FileType &type,
+                      const QString intensityId = "");
+
 private:
 
     bool writeIntensity_;
@@ -44,6 +58,17 @@ private:
 
     pcl::PointCloud<pcl::PointXYZ> xyzCloud_;
     pcl::PointCloud<pcl::PointXYZI> xyziCloud_;
+    
+    // Finds the column index of the searched string.
+    // Returns -1 if not found.
+    // Used for finding x, y, z and intensity columns.
+    void findColIndex(const QString &line, const QString &searched,
+                   int &index, const char &delim);
+
+    bool parsePointXYZ(const QStringList &lineList, const int &xIndex,
+                       const int &yIndex, const int &zIndex);
+    bool parsePointXYZI(const QStringList &lineList, const int &xIndex,
+                        const int &yIndex, const int &zIndex, const int &intensityIndex);
 };
 
 #endif // PCDBINARYWRITER_H

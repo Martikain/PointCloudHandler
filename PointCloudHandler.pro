@@ -26,3 +26,10 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     pcdwriter.h
 
+
+INCLUDEPATH += $$(HOME)/eigen3
+INCLUDEPATH += /usr/include/pcl-1.8
+INCLUDEPATH += /usr/include/vtk-6.3
+INCLUDEPATH += /usr/include/boost
+
+LIBS += -L/usr/lib/x86_64-linux-gnu -lpcl_visualization -lpcl_common -lpcl_io -lboost_system
