@@ -118,7 +118,8 @@ bool PCDWriter::parsePointXYZI(const QStringList &lineList, const int &xIndex,
     int listSize = lineList.size();
     if ( listSize <= xIndex ||
          listSize <= yIndex ||
-         listSize <= zIndex )
+         listSize <= zIndex ||
+         listSize <= intensityIndex )
         return false;
 
     bool ok(false);
@@ -151,6 +152,8 @@ bool PCDWriter::convertToPCD(const QString &filePath, const char &delim,
                              const QString &newPath, const FileType &type,
                              const QString intensityId)
 {
+    qDebug() << "Starting PCD file conversion...";
+
     // Try to open the file
     QFile originalFile(filePath);
     if ( !originalFile.open(QIODevice::ReadOnly) )
@@ -158,7 +161,8 @@ bool PCDWriter::convertToPCD(const QString &filePath, const char &delim,
         qDebug() << "ERROR: Could not find given file. File path given: "
                     + filePath;
         return false;
-    }
+    } else
+        qDebug() << "Opened file to convert.";
 
     QTextStream ts(&originalFile);
     if ( ts.atEnd() )
@@ -180,7 +184,7 @@ bool PCDWriter::convertToPCD(const QString &filePath, const char &delim,
     } else
         writeIntensity_ = false;
 
-    if ( intensityId == -1 )
+    if ( intensityIndex == -1 )
     {
         qDebug() << "ERROR: Could not find intensity column.";
         if ( originalFile.isOpen() )
@@ -194,6 +198,7 @@ bool PCDWriter::convertToPCD(const QString &filePath, const char &delim,
     findColIndex(firstLine, "y", yIndex, delim);
     findColIndex(firstLine, "z", zIndex, delim);
 
+    // Check that indices have been found
     if ( xIndex == -1 ||
          yIndex == -1 ||
          zIndex == -1 )
@@ -206,6 +211,8 @@ bool PCDWriter::convertToPCD(const QString &filePath, const char &delim,
 
     // Parse the file and create a new point cloud
     QStringList lineList;
+    unsigned int numOfPointLines(0);
+    unsigned int successfulLines(0);
 
     // Store points without intensity values
     if ( !writeIntensity_ )
@@ -213,14 +220,19 @@ bool PCDWriter::convertToPCD(const QString &filePath, const char &delim,
         while ( !ts.atEnd() )
         {
             lineList = ts.readLine().split(delim);
-            parsePointXYZ(lineList, xIndex, yIndex, zIndex);
+            if ( parsePointXYZ(lineList, xIndex, yIndex, zIndex) )
+                successfulLines++;
+            numOfPointLines++;
         }
-    } else
+    } else // Store the intensity data
     {
         while ( !ts.atEnd() )
         {
             lineList = ts.readLine().split(delim);
-            parsePointXYZI(lineList, xIndex, yIndex, zIndex, intensityIndex);
+            if ( parsePointXYZI
+                 (lineList, xIndex, yIndex, zIndex, intensityIndex) )
+                successfulLines++;
+            numOfPointLines++;
         }
     }
 
@@ -235,7 +247,16 @@ bool PCDWriter::convertToPCD(const QString &filePath, const char &delim,
     else
     {
         qDebug() << "ERROR: Unknown target file type.";
+        return false;
     }
+
+    qDebug() << "File succesfully converted.";
+    qDebug() << "  * Total number of point lines: " << numOfPointLines;
+    qDebug() << "  * Points converted: " << successfulLines;
+    qDebug() << "  * Succesfull conversion: "
+             << static_cast<double>(successfulLines) /
+                static_cast<double>(numOfPointLines) * 100
+             << " %";
 
     return true;
 }
