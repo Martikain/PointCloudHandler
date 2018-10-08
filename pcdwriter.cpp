@@ -1,13 +1,15 @@
 #include "pcdwriter.h"
 
 
-PCDWriter::PCDWriter(const bool &safeWrite) : addFalsePt_(!safeWrite)
+PCDWriter::PCDWriter(const bool &safeWrite) :  writeIntensity_(false),
+                                               addFalsePt_(!safeWrite)
 {
 }
 
 
 void PCDWriter::storeIntensity(const bool &val)
 {
+    clearClouds();
     writeIntensity_ = val;
 }
 
@@ -70,174 +72,41 @@ void PCDWriter::writeAscii(const QString &filePath)
 }
 
 
-void PCDWriter::findColIndex(const QString &line, const QString &searched,
-                          int &index, const QString &delim)
+
+void PCDWriter::clearClouds()
 {
-    QStringList flList(line.split(delim));
-    index = flList.indexOf(searched);
-}
-
-
-bool PCDWriter::parsePointXYZ(const QStringList &lineList, const int &xIndex,
-                              const int &yIndex, const int &zIndex)
-{
-    // Check for indexing errors
-    int listSize = lineList.size();
-    if ( listSize <= xIndex ||
-         listSize <= yIndex ||
-         listSize <= zIndex )
-        return false;
-
-    bool ok(false);
-    float x(0.0), y(0.0), z(0.0);
-
-    // Read x, y and z and check their validity
-    x = lineList.at(xIndex).toFloat(&ok);
-    if ( !ok )
-        return false;
-
-    y = lineList.at(yIndex).toFloat(&ok);
-    if ( !ok )
-        return false;
-
-    z = lineList.at(zIndex).toFloat(&ok);
-    if ( !ok )
-        return false;
-
-    addPoint(x,y,z);
-
-    return true;
-}
-
-
-bool PCDWriter::parsePointXYZI(const QStringList &lineList, const int &xIndex,
-                               const int &yIndex, const int &zIndex,
-                               const int &intensityIndex)
-{
-    // Check for indexing errors
-    int listSize = lineList.size();
-    if ( listSize <= xIndex ||
-         listSize <= yIndex ||
-         listSize <= zIndex ||
-         listSize <= intensityIndex )
-        return false;
-
-    bool ok(false);
-    float x(0.0), y(0.0), z(0.0), intensity(0.0);
-
-    // Read x, y and z and check their validity
-    x = lineList.at(xIndex).toFloat(&ok);
-    if ( !ok )
-        return false;
-
-    y = lineList.at(yIndex).toFloat(&ok);
-    if ( !ok )
-        return false;
-
-    z = lineList.at(zIndex).toFloat(&ok);
-    if ( !ok )
-        return false;
-
-    intensity = lineList.at(intensityIndex).toFloat(&ok);
-    if ( !ok )
-        return false;
-
-    addPoint(x,y,z, intensity);
-
-    return true;
+    xyzCloud_.clear();
+    xyziCloud_.clear();
 }
 
 
 bool PCDWriter::convertToPCD(const QString &filePath, const QString &delim,
                              const QString &newPath, const FileType &type,
-                             const QString intensityId)
+                             const QString &intensityId)
 {
+    clearClouds();
+
     qDebug() << "Starting PCD file conversion...";
 
-    // Try to open the file
-    QFile originalFile(filePath);
-    if ( !originalFile.open(QIODevice::ReadOnly) )
-    {
-        qDebug() << "ERROR: Could not find given file. File path given: "
-                    + filePath;
-        return false;
-    } else
-        qDebug() << "Opened file to convert.";
+    int numOfPointLines(0), successfulLines(0);
 
-    QTextStream ts(&originalFile);
-    if ( ts.atEnd() )
-    {
-        qDebug() << "ERROR: Empty file";
-        if ( originalFile.isOpen() )
-            originalFile.close();
-        return false;
-    }
+    bool parseOK(false);
 
-    QString firstLine(ts.readLine());
-
-    // Search for the intensity column
-    int intensityIndex(-1);
-    if ( intensityId != "" )
+    if ( intensityId == "" )
     {
-        findColIndex(firstLine, intensityId, intensityIndex, delim);
-        writeIntensity_ = true;
-    } else
+        parseOK = parseCloudXYZ(xyzCloud_, numOfPointLines,
+                                successfulLines, filePath, delim);
         writeIntensity_ = false;
-
-    if ( intensityIndex == -1 && writeIntensity_ )
+    } else
     {
-        qDebug() << "ERROR: Could not find intensity column.";
-        if ( originalFile.isOpen() )
-            originalFile.close();
+        parseOK = parseCloudXYZI(xyziCloud_, numOfPointLines,
+                                      successfulLines, filePath, delim,
+                                      intensityId);
+        writeIntensity_ = true;
+    }
+
+    if ( !parseOK )
         return false;
-    }
-
-    // Find other column indices
-    int xIndex(-1), yIndex(-1), zIndex(-1);
-    findColIndex(firstLine, "x", xIndex, delim);
-    findColIndex(firstLine, "y", yIndex, delim);
-    findColIndex(firstLine, "z", zIndex, delim);
-
-    // Check that indices have been found
-    if ( xIndex == -1 ||
-         yIndex == -1 ||
-         zIndex == -1 )
-    {
-        qDebug() << "ERROR: Could not find coordinate columns.";
-        if ( originalFile.isOpen() )
-            originalFile.close();
-        return false;
-    }
-
-    // Parse the file and create a new point cloud
-    QStringList lineList;
-    unsigned int numOfPointLines(0);
-    unsigned int successfulLines(0);
-
-    // Store points without intensity values
-    if ( !writeIntensity_ )
-    {
-        while ( !ts.atEnd() )
-        {
-            lineList = ts.readLine().split(delim);
-            if ( parsePointXYZ(lineList, xIndex, yIndex, zIndex) )
-                successfulLines++;
-            numOfPointLines++;
-        }
-    } else // Store the intensity data
-    {
-        while ( !ts.atEnd() )
-        {
-            lineList = ts.readLine().split(delim);
-            if ( parsePointXYZI
-                 (lineList, xIndex, yIndex, zIndex, intensityIndex) )
-                successfulLines++;
-            numOfPointLines++;
-        }
-    }
-
-    if ( originalFile.isOpen() )
-        originalFile.close();
 
     // Create the PCD file
     if ( type == ASCII )
@@ -258,6 +127,8 @@ bool PCDWriter::convertToPCD(const QString &filePath, const QString &delim,
              << static_cast<double>(successfulLines) /
                 static_cast<double>(numOfPointLines) * 100
              << " %";
+
+    clearClouds();
 
     return true;
 }

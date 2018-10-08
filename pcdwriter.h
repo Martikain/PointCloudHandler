@@ -3,6 +3,8 @@
 
 #define DEFAULT_INTENSITY 100.0
 
+#include "pcdparse.h"
+
 #include <QDebug>
 #include <string>
 #include <QString>
@@ -12,6 +14,12 @@
 #include <pcl/point_types.h>
 #include <pcl/io/io.h>
 #include <pcl/io/pcd_io.h>
+
+#ifndef PCL_TYPEDEFS
+#define PCL_TYPEDEFS
+typedef pcl::PointCloud<pcl::PointXYZ> XYZCloud;
+typedef pcl::PointCloud<pcl::PointXYZI> XYZICloud;
+#endif
 
 enum FileType{ASCII = 0, binary = 1};
 
@@ -26,9 +34,10 @@ public:
     // texts and no point is added.
     PCDWriter(const bool &safeWrite = true);
 
-    // Defines whether intensity values are stored in the PCD file
-    // If true, all future addPoint() calls must have intensity values
-    // If false, all future addPoint() calls must omit intensity
+    // Defines whether intensity values are stored in the PCD file.
+    // If true, all future addPoint() calls must have intensity values.
+    // If false, all future addPoint() calls must omit intensity.
+    // Clears all current points from the clouds.
     void storeIntensity(const bool &val);
 
     // Functions for adding points to the point cloud
@@ -47,7 +56,7 @@ public:
     // from the column with the first row value intensityId
     bool convertToPCD(const QString &filePath, const QString &delim,
                       const QString &newPath, const FileType &type,
-                      const QString intensityId = "");
+                      const QString &intensityId = "");
 
 private:
 
@@ -56,19 +65,11 @@ private:
                       // intensity is required and it is not provided
                       // or vice versa
 
-    pcl::PointCloud<pcl::PointXYZ> xyzCloud_;
-    pcl::PointCloud<pcl::PointXYZI> xyziCloud_;
-    
-    // Finds the column index of the searched string.
-    // Returns -1 if not found.
-    // Used for finding x, y, z and intensity columns.
-    void findColIndex(const QString &line, const QString &searched,
-                   int &index, const QString &delim);
+    XYZCloud xyzCloud_;
+    XYZICloud xyziCloud_;
 
-    bool parsePointXYZ(const QStringList &lineList, const int &xIndex,
-                       const int &yIndex, const int &zIndex);
-    bool parsePointXYZI(const QStringList &lineList, const int &xIndex,
-                        const int &yIndex, const int &zIndex, const int &intensityIndex);
+    // Removes all points from current clouds
+    void clearClouds();
 };
 
 #endif // PCDBINARYWRITER_H
