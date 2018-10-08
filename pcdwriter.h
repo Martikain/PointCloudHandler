@@ -45,7 +45,7 @@ public:
     // Converts a delimited file into PCD format.
     // If intensityId is given, this will search for intensity values
     // from the column with the first row value intensityId
-    bool convertToPCD(const QString &filePath, const char &delim,
+    bool convertToPCD(const QString &filePath, const QString &delim,
                       const QString &newPath, const FileType &type,
                       const QString intensityId = "");
 
@@ -63,7 +63,7 @@ private:
     // Returns -1 if not found.
     // Used for finding x, y, z and intensity columns.
     void findColIndex(const QString &line, const QString &searched,
-                   int &index, const char &delim);
+                   int &index, const QString &delim);
 
     bool parsePointXYZ(const QStringList &lineList, const int &xIndex,
                        const int &yIndex, const int &zIndex);

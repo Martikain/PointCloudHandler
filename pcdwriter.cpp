@@ -71,7 +71,7 @@ void PCDWriter::writeAscii(const QString &filePath)
 
 
 void PCDWriter::findColIndex(const QString &line, const QString &searched,
-                          int &index, const char &delim)
+                          int &index, const QString &delim)
 {
     QStringList flList(line.split(delim));
     index = flList.indexOf(searched);
@@ -148,7 +148,7 @@ bool PCDWriter::parsePointXYZI(const QStringList &lineList, const int &xIndex,
 }
 
 
-bool PCDWriter::convertToPCD(const QString &filePath, const char &delim,
+bool PCDWriter::convertToPCD(const QString &filePath, const QString &delim,
                              const QString &newPath, const FileType &type,
                              const QString intensityId)
 {
@@ -184,7 +184,7 @@ bool PCDWriter::convertToPCD(const QString &filePath, const char &delim,
     } else
         writeIntensity_ = false;
 
-    if ( intensityIndex == -1 )
+    if ( intensityIndex == -1 && writeIntensity_ )
     {
         qDebug() << "ERROR: Could not find intensity column.";
         if ( originalFile.isOpen() )
@@ -251,6 +251,7 @@ bool PCDWriter::convertToPCD(const QString &filePath, const char &delim,
     }
 
     qDebug() << "File succesfully converted.";
+    qDebug() << "File path: " + newPath;
     qDebug() << "  * Total number of point lines: " << numOfPointLines;
     qDebug() << "  * Points converted: " << successfulLines;
     qDebug() << "  * Succesfull conversion: "
