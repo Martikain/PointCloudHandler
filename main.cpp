@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     QCommandLineOption destOption(QStringList() << "d" << "destination",
             QCoreApplication::translate
             ("main", "File path to the destination file."),
-            "main", defaultDest);
+            "destination", defaultDest);
     parser.addOption(destOption);
 
     QCommandLineOption delimOption("delimiter",
