@@ -16,7 +16,9 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         main.cpp \
-    pcdwriter.cpp
+    pcdwriter.cpp \
+    pcdparse.cpp \
+    pcdview.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -24,12 +26,14 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
-    pcdwriter.h
+    pcdwriter.h \
+    pcdparse.h \
+    pcdview.h
 
 
 INCLUDEPATH += $$(HOME)/eigen3
 INCLUDEPATH += /usr/include/pcl-1.7
-INCLUDEPATH += /usr/include/vtk-6.3
+INCLUDEPATH += /usr/include/vtk-6.2
 INCLUDEPATH += /usr/include/boost
 
 LIBS += -lpcl_visualization -lpcl_common -lpcl_io -lboost_system
