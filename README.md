@@ -12,7 +12,7 @@ options for the command are
 
 -s or --source		Source file path (CSV file)
 
--d or -- destination	Destination file path (PCD file)
+-d or --destination	Destination file path (PCD file)
 
 --delimiter		Delimiter of the source CSV file. Space is the default
 			delimiter.
