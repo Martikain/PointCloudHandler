@@ -1,2 +1,3 @@
 # PointCloudHandler
-A project for basic point cloud operations such as binary PCD format point cloud storing without PCL.
+A command line project for basic point cloud operations such file conversion from
+CSV to PCD.
