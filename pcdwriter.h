@@ -46,10 +46,10 @@ public:
                      const float &z, const float &intensity);
 
     // Creates a binary format PCD file
-    void writeBinary(const QString &filePath);
+    void createBinaryFile(const QString &filePath);
 
     // Creates an ASCII format PCD file
-    void writeAscii(const QString &filePath);
+    void createAsciiFile(const QString &filePath);
 
     // Converts a delimited file into PCD format.
     // If intensityId is given, this will search for intensity values

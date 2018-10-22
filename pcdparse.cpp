@@ -1,20 +1,23 @@
 #include "pcdparse.h"
 
 
-bool parseXYZ(const QStringList &list, const int &xIndex, const int &yIndex, const int &zIndex, float &x, float &y, float &z)
+bool coordinatesFromList
+    (const QStringList &list, const int &xIndex,
+     const int &yIndex, const int &zIndex,
+     float &x, float &y, float &z)
 {
-    bool ok(false);
+    bool conversionOk(false);
 
-    x = list.at(xIndex).toFloat(&ok);
-    if ( !ok )
+    x = list.at(xIndex).toFloat(&conversionOk);
+    if ( !conversionOk )
         return false;
 
-    y = list.at(yIndex).toFloat(&ok);
-    if ( !ok )
+    y = list.at(yIndex).toFloat(&conversionOk);
+    if ( !conversionOk )
         return false;
 
-    z = list.at(zIndex).toFloat(&ok);
-    if ( !ok )
+    z = list.at(zIndex).toFloat(&conversionOk);
+    if ( !conversionOk )
         return false;
 
     return true;
@@ -22,9 +25,10 @@ bool parseXYZ(const QStringList &list, const int &xIndex, const int &yIndex, con
 
 
 
-bool parsePointXYZ(XYZCloud &cloud, const QStringList &lineList,
-                              const int &xIndex, const int &yIndex,
-                              const int &zIndex)
+bool parsePointXYZ
+    (XYZCloud &cloud, const QStringList &lineList,
+     const int &xIndex, const int &yIndex,
+     const int &zIndex)
 {
     // Check for indexing errors
     int listSize = lineList.size();
@@ -34,7 +38,9 @@ bool parsePointXYZ(XYZCloud &cloud, const QStringList &lineList,
         return false;
 
     float x(0.0), y(0.0), z(0.0);
-    if ( parseXYZ(lineList, xIndex, yIndex, zIndex, x, y, z) == false )
+    bool coordsFound = coordinatesFromList
+                       (lineList, xIndex, yIndex, zIndex, x, y, z);
+    if ( !coordsFound )
         return false;
 
     pcl::PointXYZ p(x, y, z);
@@ -45,9 +51,10 @@ bool parsePointXYZ(XYZCloud &cloud, const QStringList &lineList,
 
 
 
-bool parsePointXYZI(XYZICloud &cloud, const QStringList &lineList,
-                               const int &xIndex, const int &yIndex,
-                               const int &zIndex, const int &intensityIndex)
+bool parsePointXYZI
+    (XYZICloud &cloud, const QStringList &lineList,
+     const int &xIndex, const int &yIndex,
+     const int &zIndex, const int &intensityIndex)
 {
     // Check for indexing errors
     int listSize = lineList.size();
@@ -60,8 +67,9 @@ bool parsePointXYZI(XYZICloud &cloud, const QStringList &lineList,
     bool ok(false);
     float x(0.0), y(0.0), z(0.0), intensity(0.0);
 
-    // Read x, y and z and check their validity
-    if ( parseXYZ(lineList, xIndex, yIndex, zIndex, x, y, z) == false )
+    bool coordsFound = coordinatesFromList
+                       (lineList, xIndex, yIndex, zIndex, x, y, z);
+    if ( !coordsFound )
         return false;
 
     intensity = lineList.at(intensityIndex).toFloat(&ok);
@@ -79,50 +87,40 @@ bool parsePointXYZI(XYZICloud &cloud, const QStringList &lineList,
 }
 
 
-bool parseCloudXYZ(XYZCloud &cloud, int &numOfLines, int &successfulPts, const QString &filePath, const QString &delim)
+bool CSVtoPCD
+    (XYZCloud &cloud, int &numOfLines,
+     int &convertedPts, const QString &filePath,
+     const QString &delim)
 {
-    // Try to open the file
-    QFile originalFile(filePath);
-    if ( !originalFile.open(QIODevice::ReadOnly) )
-    {
-        qDebug() << "ERROR: Could not find given file. File path given: "
-                    + filePath;
+    QFile originalFile;
+    if ( !openFile(filePath, originalFile) )
         return false;
-    } else
-        qDebug() << "Opened file to convert.";
 
-    QTextStream ts(&originalFile);
-    if ( ts.atEnd() )
-    {
-        qDebug() << "ERROR: Empty file";
-        if ( originalFile.isOpen() )
-            originalFile.close();
-        return false;
-    }
+    QTextStream textStream(&originalFile);
+    if ( textStream.atEnd() )
+        return emptyFileError(originalFile);
 
-    QString firstLine(ts.readLine());
+    QString firstLine(textStream.readLine());
 
     // Find coordinate column indices
-    int xIndex(-1), yIndex(-1), zIndex(-1);
-    bool ok = findCoordinateIndices(firstLine, delim, xIndex, yIndex, zIndex);
+    int xCol(-1), yCol(-1), zCol(-1);
+    bool columnsFound = findCoordinateColumns
+            (firstLine, delim, xCol, yCol, zCol);
 
-    if ( !ok )
-    {
-        qDebug() << "ERROR: Could not find coordinate indices in the file.";
-        return false;
-    }
+    if ( !columnsFound )
+        return columnError(originalFile);
 
     // Parse the file and create a new point cloud
     QStringList lineList;
     numOfLines = 0;
-    successfulPts = 0;
+    convertedPts = 0;
 
     // Store points without intensity values
-    while ( !ts.atEnd() )
+    while ( !textStream.atEnd() )
     {
-        lineList = ts.readLine().split(delim);
-        if ( parsePointXYZ(cloud, lineList, xIndex, yIndex, zIndex) )
-            successfulPts++;
+        lineList = textStream.readLine().split(delim);
+        if ( parsePointXYZ(cloud, lineList, xCol, yCol, zCol) )
+            convertedPts++;
         numOfLines++;
     }
 
@@ -133,63 +131,44 @@ bool parseCloudXYZ(XYZCloud &cloud, int &numOfLines, int &successfulPts, const Q
 }
 
 
-bool parseCloudXYZI(XYZICloud &cloud, int &numOfLines, int &successfulPts, const QString &filePath, const QString &delim, const QString &intensityID)
+bool CSVtoPCDwithIntensity
+    (XYZICloud &cloud, int &numOfLines,
+     int &convertedPts, const QString &filePath,
+     const QString &delim, const QString &intensityID)
 {
-    // Try to open the file
-    QFile originalFile(filePath);
-    if ( !originalFile.open(QIODevice::ReadOnly) )
-    {
-        qDebug() << "ERROR: Could not find given file. File path given: "
-                    + filePath;
+    QFile originalFile;
+    if ( !openFile(filePath, originalFile) )
         return false;
-    } else
-        qDebug() << "Opened file to convert.";
 
-    QTextStream ts(&originalFile);
-    if ( ts.atEnd() )
-    {
-        qDebug() << "ERROR: Empty file";
-        if ( originalFile.isOpen() )
-            originalFile.close();
-        return false;
-    }
+    QTextStream textStream(&originalFile);
+    if ( textStream.atEnd() )
+        return emptyFileError(originalFile);
 
-    QString firstLine(ts.readLine());
+    QString firstLine(textStream.readLine());
 
     // Search for the intensity column
-    int intensityIndex(-1);
-    findColIndex(firstLine, intensityID, intensityIndex, delim);
+    int intensityCol(-1);
+    findColumnIndex(firstLine, intensityID, intensityCol, delim);
 
+    if ( intensityCol == -1 )
+        return columnError(originalFile);
 
-    if ( intensityIndex == -1 )
-    {
-        qDebug() << "ERROR: Could not find intensity column.";
-        if ( originalFile.isOpen() )
-            originalFile.close();
-        return false;
-    }
+    int xCol(-1), yCol(-1), zCol(-1);
+    bool columnsFound = findCoordinateColumns
+            (firstLine, delim, xCol, yCol, zCol);
 
-    // Find other column indices
-    int xIndex(-1), yIndex(-1), zIndex(-1);
-    bool ok = findCoordinateIndices(firstLine, delim, xIndex, yIndex, zIndex);
+    if ( !columnsFound )
+        return columnError(originalFile);
 
-    if ( !ok )
-    {
-        qDebug() << "ERROR: Could not find coordinate indices in the file.";
-        return false;
-    }
-
-    // Parse the file and create a new point cloud
     QStringList lineList;
     numOfLines = 0;
-    successfulPts = 0;
+    convertedPts = 0;
 
-    while ( !ts.atEnd() )
+    while ( !textStream.atEnd() )
     {
-        lineList = ts.readLine().split(delim);
-        if ( parsePointXYZI(cloud, lineList, xIndex,
-                            yIndex, zIndex, intensityIndex) )
-            successfulPts++;
+        lineList = textStream.readLine().split(delim);
+        if ( parsePointXYZI(cloud, lineList, xCol, yCol, zCol, intensityCol) )
+            convertedPts++;
         numOfLines++;
     }
 
@@ -200,26 +179,68 @@ bool parseCloudXYZI(XYZICloud &cloud, int &numOfLines, int &successfulPts, const
 }
 
 
-void findColIndex(const QString &line, const QString &searched,
-                  int &index, const QString &delim)
+void findColumnIndex
+    (const QString &line, const QString &searched,
+     int &index, const QString &delim)
 {
     QStringList flList(line.split(delim));
     index = flList.indexOf(searched);
 }
 
 
-bool findCoordinateIndices(const QString &firstLine, const QString &delim,
-                           int &xIndex, int &yIndex, int &zIndex)
+bool findCoordinateColumns
+    (const QString &firstLine, const QString &delim,
+     int &xCol, int &yCol, int &zCol)
 {
-    findColIndex(firstLine, "x", xIndex, delim);
-    findColIndex(firstLine, "y", yIndex, delim);
-    findColIndex(firstLine, "z", zIndex, delim);
+    findColumnIndex(firstLine, "x", xCol, delim);
+    findColumnIndex(firstLine, "y", yCol, delim);
+    findColumnIndex(firstLine, "z", zCol, delim);
 
     // Check that indices have been found
-    if ( xIndex == -1 ||
-         yIndex == -1 ||
-         zIndex == -1 )
+    if ( xCol == -1 ||
+         yCol == -1 ||
+         zCol == -1 )
         return false;
 
     return true;
+}
+
+
+bool openFile(const QString &filePath, QFile &file)
+{
+    if ( filePath.isEmpty() )
+    {
+        qDebug() << "ERROR: File path is empty string.";
+        return false;
+    }
+
+    file.setFileName(filePath);
+    if ( !file.open(QIODevice::ReadOnly) )
+    {
+        qDebug() << "ERROR: Could not find given file. "
+                    "File path given: " + filePath;
+        return false;
+    } else
+    {
+        qDebug() << "Opened file to convert.";
+        return true;
+    }
+}
+
+
+bool columnError(QFile &file)
+{
+    qDebug() << "ERROR: Could not find column.";
+    if ( file.isOpen() )
+        file.close();
+    return false;
+}
+
+
+bool emptyFileError(QFile &file)
+{
+    qDebug() << "ERROR: File is empty.";
+    if ( file.isOpen() )
+        file.close();
+    return false;
 }

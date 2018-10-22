@@ -26,7 +26,8 @@ void PCDView::viewCloud(XYZICloud &cloud)
 }
 
 
-void PCDView::viewCloud(const QString &pcdFilePath, const bool &intensity)
+void PCDView::viewCloud
+    (const QString &pcdFilePath, const bool &intensity)
 {
     const char *filePathC = pcdFilePath.toLatin1().toStdString().c_str();
 
@@ -48,8 +49,9 @@ void PCDView::viewCloud(const QString &pcdFilePath, const bool &intensity)
 }
 
 
-void PCDView::viewCloud(const QString &csvFilePath, const QString &delim,
-                        const QString &intensityID)
+void PCDView::viewCloud
+    (const QString &csvFilePath, const QString &delim,
+     const QString &intensityID)
 {
     int lines, success;
 
@@ -57,7 +59,7 @@ void PCDView::viewCloud(const QString &csvFilePath, const QString &delim,
     {
         XYZCloud cloud;
 
-        bool parseOK = parseCloudXYZ(cloud, lines, success,
+        bool parseOK = CSVtoPCD(cloud, lines, success,
                                      csvFilePath, delim);
         if ( !parseOK )
             return;
@@ -67,8 +69,9 @@ void PCDView::viewCloud(const QString &csvFilePath, const QString &delim,
     } else
     {
         XYZICloud cloud;
-        bool parseOK = parseCloudXYZI(cloud, lines, success,
-                                      csvFilePath, delim, intensityID);
+        bool parseOK = CSVtoPCDwithIntensity
+                       (cloud, lines, success,
+                        csvFilePath, delim, intensityID);
 
         if ( !parseOK )
             return;

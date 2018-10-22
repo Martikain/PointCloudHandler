@@ -1,8 +1,8 @@
 #include "pcdwriter.h"
 
 
-PCDWriter::PCDWriter(const bool &safeWrite) :  writeIntensity_(false),
-                                               addFalsePt_(!safeWrite)
+PCDWriter::PCDWriter(const bool &safeWrite) :
+    writeIntensity_(false), addFalsePt_(!safeWrite)
 {
 }
 
@@ -14,7 +14,8 @@ void PCDWriter::storeIntensity(const bool &val)
 }
 
 
-void PCDWriter::addPoint(const float &x, const float &y, const float &z)
+void PCDWriter::addPoint
+    (const float &x, const float &y, const float &z)
 {
     if ( writeIntensity_ )
     {
@@ -30,8 +31,9 @@ void PCDWriter::addPoint(const float &x, const float &y, const float &z)
 }
 
 
-void PCDWriter::addPoint(const float &x, const float &y,
-                         const float &z, const float &intensity)
+void PCDWriter::addPoint
+    (const float &x, const float &y,
+     const float &z, const float &intensity)
 {
     if ( !writeIntensity_ )
     {
@@ -50,7 +52,7 @@ void PCDWriter::addPoint(const float &x, const float &y,
 }
 
 
-void PCDWriter::writeBinary(const QString &filePath)
+void PCDWriter::createBinaryFile(const QString &filePath)
 {
     std::string fp = filePath.toLatin1().toStdString();
 
@@ -61,7 +63,7 @@ void PCDWriter::writeBinary(const QString &filePath)
 }
 
 
-void PCDWriter::writeAscii(const QString &filePath)
+void PCDWriter::createAsciiFile(const QString &filePath)
 {
     std::string fp = filePath.toLatin1().toStdString();
 
@@ -80,9 +82,10 @@ void PCDWriter::clearClouds()
 }
 
 
-bool PCDWriter::convertToPCD(const QString &filePath, const QString &delim,
-                             const QString &newPath, const FileType &type,
-                             const QString &intensityId)
+bool PCDWriter::convertToPCD
+    (const QString &filePath, const QString &delim,
+     const QString &newPath, const FileType &type,
+     const QString &intensityId)
 {
     clearClouds();
 
@@ -94,14 +97,16 @@ bool PCDWriter::convertToPCD(const QString &filePath, const QString &delim,
 
     if ( intensityId == "" )
     {
-        parseOK = parseCloudXYZ(xyzCloud_, numOfPointLines,
-                                successfulLines, filePath, delim);
+        parseOK = CSVtoPCD
+                (xyzCloud_, numOfPointLines,
+                 successfulLines, filePath, delim);
         writeIntensity_ = false;
     } else
     {
-        parseOK = parseCloudXYZI(xyziCloud_, numOfPointLines,
-                                      successfulLines, filePath, delim,
-                                      intensityId);
+        parseOK = CSVtoPCDwithIntensity
+                (xyziCloud_, numOfPointLines,
+                 successfulLines, filePath, delim,
+                 intensityId);
         writeIntensity_ = true;
     }
 
@@ -110,9 +115,9 @@ bool PCDWriter::convertToPCD(const QString &filePath, const QString &delim,
 
     // Create the PCD file
     if ( type == ASCII )
-        writeAscii(newPath);
+        createAsciiFile(newPath);
     else if ( type == binary )
-        writeBinary(newPath);
+        createBinaryFile(newPath);
     else
     {
         qDebug() << "ERROR: Unknown target file type.";

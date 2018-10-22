@@ -17,46 +17,58 @@ int main(int argc, char *argv[])
     parser.addVersionOption();
 
     // Add a positional argument for defining the operation
-    parser.addPositionalArgument("command",
-                                 QCoreApplication::translate
-                                 ("main", "Define the operation with this "
-                                          "positional argument."));
+    parser.addPositionalArgument
+            ("command", QCoreApplication::translate
+            ("main", "Define the operation with this "
+             "positional argument."));
 
     // Add the options for defining file paths, delimiters etc.
-    QCommandLineOption sourceOption(QStringList() << "s" << "source",
-            QCoreApplication::translate
-            ("main", "File path to the source file."),
-            "source", "");
+    QCommandLineOption sourceOption
+            (QStringList() << "s" << "source",
+             QCoreApplication::translate
+             ("main", "File path to the source file."),
+              "source", "");
+
     parser.addOption(sourceOption);
 
     // Create default destination file path
     QString defaultDest(QDir::homePath() + "/data/tmp.pcd");
 
-    QCommandLineOption destOption(QStringList() << "d" << "destination",
-            QCoreApplication::translate
-            ("main", "File path to the destination file."),
-            "destination", defaultDest);
+    QCommandLineOption destOption
+            (QStringList() << "d" << "destination",
+             QCoreApplication::translate
+             ("main", "File path to the destination file."),
+              "destination", defaultDest);
+
     parser.addOption(destOption);
 
-    QCommandLineOption delimOption("delimiter",
-            QCoreApplication::translate
-            ("main", "Delimiter for source file in file conversions. "
-                     "Default delimiter is space."),
-            "delimiter", "");
+    QCommandLineOption delimOption
+            ("delimiter",
+             QCoreApplication::translate
+             ("main",
+              "Delimiter for source file in file conversions. "
+              "Default delimiter is space."),
+              "delimiter", "");
+
     parser.addOption(delimOption);
 
     QCommandLineOption intensityOption(QStringList() << "i" << "intensity",
             QCoreApplication::translate
-            ("main", "Header identifier for intensity values. If blank, "
-                     "intensity values will not be stored"),
-            "intensity", "");
+            ("main",
+             "Header identifier for intensity values. If blank, "
+             "intensity values will not be stored"),
+             "intensity", "");
+
     parser.addOption(intensityOption);
 
-    QCommandLineOption formatOption(QStringList() << "f" << "format",
-            QCoreApplication::translate
-            ("main", "Format for the destination file in conversions. "
-                     "Either ASCII or BINARY"),
-            "format", "ASCII");
+    QCommandLineOption formatOption
+            (QStringList() << "f" << "format",
+             QCoreApplication::translate
+             ("main",
+              "Format for the destination file in conversions. "
+              "Either ASCII or BINARY"),
+              "format", "ASCII");
+
     parser.addOption(formatOption);
 
     // Process the arguments
