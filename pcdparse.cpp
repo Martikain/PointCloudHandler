@@ -1,95 +1,45 @@
 #include "pcdparse.h"
 
-
-bool coordinatesFromList
-    (const QStringList &list, const int &xIndex,
-     const int &yIndex, const int &zIndex,
-     float &x, float &y, float &z)
+// Functions only used by the parser
+namespace
 {
-    bool conversionOk(false);
-
-    x = list.at(xIndex).toFloat(&conversionOk);
-    if ( !conversionOk )
-        return false;
-
-    y = list.at(yIndex).toFloat(&conversionOk);
-    if ( !conversionOk )
-        return false;
-
-    z = list.at(zIndex).toFloat(&conversionOk);
-    if ( !conversionOk )
-        return false;
-
-    return true;
-}
-
-
-
 bool parsePointXYZ
-    (XYZCloud &cloud, const QStringList &lineList,
-     const int &xIndex, const int &yIndex,
-     const int &zIndex)
-{
-    // Check for indexing errors
-    int listSize = lineList.size();
-    if ( listSize <= xIndex ||
-         listSize <= yIndex ||
-         listSize <= zIndex )
-        return false;
-
-    float x(0.0), y(0.0), z(0.0);
-    bool coordsFound = coordinatesFromList
-                       (lineList, xIndex, yIndex, zIndex, x, y, z);
-    if ( !coordsFound )
-        return false;
-
-    pcl::PointXYZ p(x, y, z);
-    cloud.push_back(p);
-
-    return true;
-}
-
-
+        (XYZCloud &cloud, const QStringList &lineList,
+        const int &xIndex, const int &yIndex,
+        const int &zIndex);
 
 bool parsePointXYZI
-    (XYZICloud &cloud, const QStringList &lineList,
-     const int &xIndex, const int &yIndex,
-     const int &zIndex, const int &intensityIndex)
-{
-    // Check for indexing errors
-    int listSize = lineList.size();
-    if ( listSize <= xIndex ||
-         listSize <= yIndex ||
-         listSize <= zIndex ||
-         listSize <= intensityIndex )
-        return false;
+        (XYZICloud &cloud, const QStringList &lineList,
+        const int &xIndex, const int &yIndex,
+        const int &zIndex, const int &intensityIndex);
 
-    bool ok(false);
-    float x(0.0), y(0.0), z(0.0), intensity(0.0);
+bool coordinatesFromList
+        (const QStringList &list, const int &xIndex,
+         const int &yIndex, const int &zIndex,
+         float &x, float &y, float &z);
 
-    bool coordsFound = coordinatesFromList
-                       (lineList, xIndex, yIndex, zIndex, x, y, z);
-    if ( !coordsFound )
-        return false;
+void findColumnIndex
+        (const QString &line, const QString &searched,
+         int &index, const QString &delim);
 
-    intensity = lineList.at(intensityIndex).toFloat(&ok);
-    if ( !ok )
-        return false;
+bool findCoordinateColumns
+        (const QString &firstLine, const QString &delim,
+        int &xCol, int &yCol, int &zCol);
 
-    pcl::PointXYZI p(intensity);
-    p.x = x;
-    p.y = y;
-    p.z = z;
+bool openFile(const QString &filePath, QFile &file);
 
-    cloud.push_back(p);
+bool columnError(QFile &file);
 
-    return true;
+bool emptyFileError(QFile &file);
+
+void conversionSuccessText
+        (const QString &srcPath, const int &convertedPts,
+         const int &numOfLines);
 }
 
 
 bool CSVtoPCD
-    (XYZCloud &cloud, int &numOfLines,
-     int &convertedPts, const QString &filePath,
+    (XYZCloud &cloud, const QString &filePath,
      const QString &delim)
 {
     QFile originalFile;
@@ -112,8 +62,8 @@ bool CSVtoPCD
 
     // Parse the file and create a new point cloud
     QStringList lineList;
-    numOfLines = 0;
-    convertedPts = 0;
+    int numOfLines(0);
+    int convertedPts(0);
 
     // Store points without intensity values
     while ( !textStream.atEnd() )
@@ -124,6 +74,8 @@ bool CSVtoPCD
         numOfLines++;
     }
 
+    conversionSuccessText(filePath, convertedPts, numOfLines);
+
     if ( originalFile.isOpen() )
         originalFile.close();
 
@@ -132,8 +84,7 @@ bool CSVtoPCD
 
 
 bool CSVtoPCDwithIntensity
-    (XYZICloud &cloud, int &numOfLines,
-     int &convertedPts, const QString &filePath,
+    (XYZICloud &cloud, const QString &filePath,
      const QString &delim, const QString &intensityID)
 {
     QFile originalFile;
@@ -161,8 +112,8 @@ bool CSVtoPCDwithIntensity
         return columnError(originalFile);
 
     QStringList lineList;
-    numOfLines = 0;
-    convertedPts = 0;
+    int numOfLines(0);
+    int convertedPts(0);
 
     while ( !textStream.atEnd() )
     {
@@ -172,10 +123,113 @@ bool CSVtoPCDwithIntensity
         numOfLines++;
     }
 
+    conversionSuccessText(filePath, convertedPts, numOfLines);
+
     if ( originalFile.isOpen() )
         originalFile.close();
 
     return true;
+}
+
+
+namespace
+{
+bool coordinatesFromList
+    (const QStringList &list, const int &xIndex,
+     const int &yIndex, const int &zIndex,
+     float &x, float &y, float &z)
+{
+    bool conversionOk(false);
+
+    x = list.at(xIndex).toFloat(&conversionOk);
+    if ( !conversionOk )
+        return false;
+
+    y = list.at(yIndex).toFloat(&conversionOk);
+    if ( !conversionOk )
+        return false;
+
+    z = list.at(zIndex).toFloat(&conversionOk);
+    if ( !conversionOk )
+        return false;
+
+    return true;
+}
+
+
+bool parsePointXYZ
+    (XYZCloud &cloud, const QStringList &lineList,
+     const int &xIndex, const int &yIndex,
+     const int &zIndex)
+{
+    // Check for indexing errors
+    int listSize = lineList.size();
+    if ( listSize <= xIndex ||
+         listSize <= yIndex ||
+         listSize <= zIndex )
+        return false;
+
+    float x(0.0), y(0.0), z(0.0);
+    bool coordsFound = coordinatesFromList
+            (lineList, xIndex, yIndex, zIndex, x, y, z);
+    if ( !coordsFound )
+        return false;
+
+    pcl::PointXYZ p(x, y, z);
+    cloud.push_back(p);
+
+    return true;
+}
+
+
+bool parsePointXYZI
+    (XYZICloud &cloud, const QStringList &lineList,
+     const int &xIndex, const int &yIndex,
+     const int &zIndex, const int &intensityIndex)
+{
+    // Check for indexing errors
+    int listSize = lineList.size();
+    if ( listSize <= xIndex ||
+         listSize <= yIndex ||
+         listSize <= zIndex ||
+         listSize <= intensityIndex )
+        return false;
+
+    bool ok(false);
+    float x(0.0), y(0.0), z(0.0), intensity(0.0);
+
+    bool coordsFound = coordinatesFromList
+            (lineList, xIndex, yIndex, zIndex, x, y, z);
+    if ( !coordsFound )
+        return false;
+
+    intensity = lineList.at(intensityIndex).toFloat(&ok);
+    if ( !ok )
+        return false;
+
+    pcl::PointXYZI p(intensity);
+    p.x = x;
+    p.y = y;
+    p.z = z;
+
+    cloud.push_back(p);
+
+    return true;
+}
+
+
+void conversionSuccessText
+    (const QString &srcPath, const int &convertedPts,
+     const int &numOfLines)
+{
+    qDebug() << "CSV file succesfully parsed.";
+    qDebug() << "File path: " << srcPath;
+    qDebug() << "  * Total number of point lines: " << numOfLines;
+    qDebug() << "  * Points converted: " << convertedPts;
+    qDebug() << "  * Succesfull conversion: "
+             << static_cast<double>(convertedPts) /
+                static_cast<double>(numOfLines) * 100
+             << " %";
 }
 
 
@@ -244,3 +298,5 @@ bool emptyFileError(QFile &file)
         file.close();
     return false;
 }
+
+} // namespace

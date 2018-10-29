@@ -1,8 +1,12 @@
-#include "pcdwriter.h"
+#include "util.h"
 #include <QCoreApplication>
 #include <QCommandLineParser>
-#include <QFile>
 #include <QDir>
+
+void convert(const QString &srcPath, const QString &destPath,
+             const QString &delim, const QString &intensityID,
+             const QString &format);
+
 
 int main(int argc, char *argv[])
 {
@@ -12,6 +16,7 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationName("PCD Handler");
     QCoreApplication::setApplicationVersion("1.0");
     QCommandLineParser parser;
+
     parser.setApplicationDescription("PCD Handler");
     parser.addHelpOption();
     parser.addVersionOption();
@@ -88,34 +93,38 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    // Process the 'convert' command
+    // Get option values
+    const QString source(parser.value(sourceOption));
+    const QString dest(parser.value(destOption));
+    const QString delim(parser.value(delimOption));
+    const QString intensityID(parser.value(intensityOption));
+    const QString format(parser.value(formatOption));
+
     if ( posArgs.front().toUpper() == "CONVERT" )
-    {
-        // Get option values
-        const QString source(parser.value(sourceOption));
-        const QString dest(parser.value(destOption));
-        const QString delim(parser.value(delimOption));
-        const QString intensityID(parser.value(intensityOption));
-        const QString format(parser.value(formatOption));
-
-        if ( source == "" )
-        {
-            qDebug() << "Please provide the file path to the source file.";
-            return 0;
-        }
-
-        PCDWriter pcdWriter;
-        if ( format.toUpper() == "ASCII" )
-            pcdWriter.convertToPCD(source, delim, dest, ASCII, intensityID);
-        else if ( format.toUpper() == "BINARY" )
-            pcdWriter.convertToPCD(source, delim, dest, binary, intensityID);
-        else
-        {
-            qDebug() << "ERROR: Unknown file conversion format. "
-                        "Use either ASCII or BINARY.";
-            return 0;
-        }
-    }
+        convert(source, dest, delim, intensityID, format);
 
     return 0;
+}
+
+
+void convert(const QString &srcPath, const QString &destPath,
+             const QString &delim, const QString &intensityID,
+             const QString &format)
+{
+    if ( srcPath == "" )
+    {
+        qDebug() << "Please provide the file path to the source file.";
+        return;
+    }
+
+    if ( format.toUpper() == "ASCII" )
+        CSVtoPCDfile(srcPath, destPath, delim, intensityID);
+    else if ( format.toUpper() == "BINARY" )
+        CSVtoBinaryPCDfile(srcPath, destPath, delim, intensityID);
+    else
+    {
+        qDebug() << "ERROR: Unknown file conversion format. "
+                    "Use either ASCII or BINARY.";
+        return;
+    }
 }
