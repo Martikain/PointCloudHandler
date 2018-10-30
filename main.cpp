@@ -3,9 +3,9 @@
 #include <QCommandLineParser>
 #include <QDir>
 
-void convert(const QString &srcPath, const QString &destPath,
-             const QString &delim, const QString &intensityID,
-             const QString &format);
+void convert(QString srcPath, QString destPath,
+             QString delim, QString intensityID,
+             QString format);
 
 
 int main(int argc, char *argv[])
@@ -82,15 +82,15 @@ int main(int argc, char *argv[])
 
     if ( posArgs.size() == 0 )
     {
-        qDebug() << "Please provide a command. See --help for "
-                    "more information.";
-        return 0;
+        qWarning() << "Please provide a command. See --help for"
+                   << "more information.";
+        return 1;
     }
 
     if ( posArgs.size() != 1 )
     {
-        qDebug() << "ERROR: Provide only one command.";
-        return 0;
+        qCritical() << "ERROR: Provide only one command.";
+        return 1;
     }
 
     // Get option values
@@ -101,15 +101,17 @@ int main(int argc, char *argv[])
     const QString format(parser.value(formatOption));
 
     if ( posArgs.front().toUpper() == "CONVERT" )
+    {
         convert(source, dest, delim, intensityID, format);
+    }
 
     return 0;
 }
 
 
-void convert(const QString &srcPath, const QString &destPath,
-             const QString &delim, const QString &intensityID,
-             const QString &format)
+void convert(QString srcPath, QString destPath,
+             QString delim, QString intensityID,
+             QString format)
 {
     if ( srcPath == "" )
     {
@@ -118,13 +120,15 @@ void convert(const QString &srcPath, const QString &destPath,
     }
 
     if ( format.toUpper() == "ASCII" )
-        CSVtoPCDfile(srcPath, destPath, delim, intensityID);
-    else if ( format.toUpper() == "BINARY" )
-        CSVtoBinaryPCDfile(srcPath, destPath, delim, intensityID);
-    else
     {
-        qDebug() << "ERROR: Unknown file conversion format. "
-                    "Use either ASCII or BINARY.";
+        CSVtoPCDfile(srcPath, destPath, delim, intensityID);
+    } else if ( format.toUpper() == "BINARY" )
+    {
+        CSVtoBinaryPCDfile(srcPath, destPath, delim, intensityID);
+    } else
+    {
+        qCritical() << "ERROR: Unknown file conversion format."
+                    << "Use either ASCII or BINARY.";
         return;
     }
 }

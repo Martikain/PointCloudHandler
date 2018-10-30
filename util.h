@@ -5,10 +5,10 @@
 #include <QString>
 #include <pcl/io/pcd_io.h>
 
-void CSVtoPCDfile(const QString &srcPath, const QString &destPath,
-                  const QString &delim, const QString &intensityID = "");
+void CSVtoPCDfile(QString srcPath, QString destPath,
+                  QString delim, QString intensityID = "");
 
-void CSVtoBinaryPCDfile(const QString &srcPath, const QString &destPath,
-                  const QString &delim, const QString &intensityID = "");
+void CSVtoBinaryPCDfile(QString srcPath, QString destPath,
+                  QString delim, QString intensityID = "");
 
 #endif // UTIL_H

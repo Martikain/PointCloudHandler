@@ -5,50 +5,53 @@ namespace
 {
 bool parsePointXYZ
         (XYZCloud &cloud, const QStringList &lineList,
-        const int &xIndex, const int &yIndex,
-        const int &zIndex);
+        int xIndex, int yIndex,
+        int zIndex);
 
 bool parsePointXYZI
         (XYZICloud &cloud, const QStringList &lineList,
-        const int &xIndex, const int &yIndex,
-        const int &zIndex, const int &intensityIndex);
+        int xIndex, int yIndex,
+        int zIndex, int intensityIndex);
 
 bool coordinatesFromList
-        (const QStringList &list, const int &xIndex,
-         const int &yIndex, const int &zIndex,
+        (const QStringList &list, int xIndex,
+         int yIndex, int zIndex,
          float &x, float &y, float &z);
 
 void findColumnIndex
-        (const QString &line, const QString &searched,
-         int &index, const QString &delim);
+        (QString line, QString searched,
+         int &index, QString delim);
 
 bool findCoordinateColumns
-        (const QString &firstLine, const QString &delim,
+        (QString firstLine, QString delim,
         int &xCol, int &yCol, int &zCol);
 
-bool openFile(const QString &filePath, QFile &file);
+bool openFile(QString filePath, QFile &file);
 
 bool columnError(QFile &file);
 
 bool emptyFileError(QFile &file);
 
 void conversionSuccessText
-        (const QString &srcPath, const int &convertedPts,
-         const int &numOfLines);
+        (QString srcPath, int convertedPts,
+         int numOfLines);
 }
 
 
 bool CSVtoPCD
-    (XYZCloud &cloud, const QString &filePath,
-     const QString &delim)
+    (XYZCloud &cloud, QString filePath, QString delim)
 {
     QFile originalFile;
     if ( !openFile(filePath, originalFile) )
+    {
         return false;
+    }
 
     QTextStream textStream(&originalFile);
     if ( textStream.atEnd() )
+    {
         return emptyFileError(originalFile);
+    }
 
     QString firstLine(textStream.readLine());
 
@@ -58,7 +61,9 @@ bool CSVtoPCD
             (firstLine, delim, xCol, yCol, zCol);
 
     if ( !columnsFound )
+    {
         return columnError(originalFile);
+    }
 
     // Parse the file and create a new point cloud
     QStringList lineList;
@@ -70,30 +75,37 @@ bool CSVtoPCD
     {
         lineList = textStream.readLine().split(delim);
         if ( parsePointXYZ(cloud, lineList, xCol, yCol, zCol) )
+        {
             convertedPts++;
+        }
         numOfLines++;
     }
 
     conversionSuccessText(filePath, convertedPts, numOfLines);
 
     if ( originalFile.isOpen() )
+    {
         originalFile.close();
-
+    }
     return true;
 }
 
 
 bool CSVtoPCDwithIntensity
-    (XYZICloud &cloud, const QString &filePath,
-     const QString &delim, const QString &intensityID)
+    (XYZICloud &cloud, QString filePath,
+     QString delim, QString intensityID)
 {
     QFile originalFile;
     if ( !openFile(filePath, originalFile) )
+    {
         return false;
+    }
 
     QTextStream textStream(&originalFile);
     if ( textStream.atEnd() )
+    {
         return emptyFileError(originalFile);
+    }
 
     QString firstLine(textStream.readLine());
 
@@ -102,14 +114,18 @@ bool CSVtoPCDwithIntensity
     findColumnIndex(firstLine, intensityID, intensityCol, delim);
 
     if ( intensityCol == -1 )
+    {
         return columnError(originalFile);
+    }
 
     int xCol(-1), yCol(-1), zCol(-1);
     bool columnsFound = findCoordinateColumns
             (firstLine, delim, xCol, yCol, zCol);
 
     if ( !columnsFound )
+    {
         return columnError(originalFile);
+    }
 
     QStringList lineList;
     int numOfLines(0);
@@ -119,14 +135,18 @@ bool CSVtoPCDwithIntensity
     {
         lineList = textStream.readLine().split(delim);
         if ( parsePointXYZI(cloud, lineList, xCol, yCol, zCol, intensityCol) )
+        {
             convertedPts++;
+        }
         numOfLines++;
     }
 
     conversionSuccessText(filePath, convertedPts, numOfLines);
 
     if ( originalFile.isOpen() )
+    {
         originalFile.close();
+    }
 
     return true;
 }
@@ -135,8 +155,8 @@ bool CSVtoPCDwithIntensity
 namespace
 {
 bool coordinatesFromList
-    (const QStringList &list, const int &xIndex,
-     const int &yIndex, const int &zIndex,
+    (const QStringList &list, int xIndex,
+     int yIndex, int zIndex,
      float &x, float &y, float &z)
 {
     bool conversionOk(false);
@@ -159,8 +179,7 @@ bool coordinatesFromList
 
 bool parsePointXYZ
     (XYZCloud &cloud, const QStringList &lineList,
-     const int &xIndex, const int &yIndex,
-     const int &zIndex)
+     int xIndex, int yIndex, int zIndex)
 {
     // Check for indexing errors
     int listSize = lineList.size();
@@ -184,8 +203,8 @@ bool parsePointXYZ
 
 bool parsePointXYZI
     (XYZICloud &cloud, const QStringList &lineList,
-     const int &xIndex, const int &yIndex,
-     const int &zIndex, const int &intensityIndex)
+     int xIndex, int yIndex,
+     int zIndex, int intensityIndex)
 {
     // Check for indexing errors
     int listSize = lineList.size();
@@ -201,11 +220,15 @@ bool parsePointXYZI
     bool coordsFound = coordinatesFromList
             (lineList, xIndex, yIndex, zIndex, x, y, z);
     if ( !coordsFound )
+    {
         return false;
+    }
 
     intensity = lineList.at(intensityIndex).toFloat(&ok);
     if ( !ok )
+    {
         return false;
+    }
 
     pcl::PointXYZI p(intensity);
     p.x = x;
@@ -219,14 +242,14 @@ bool parsePointXYZI
 
 
 void conversionSuccessText
-    (const QString &srcPath, const int &convertedPts,
-     const int &numOfLines)
+    (QString srcPath, int convertedPts,
+     int numOfLines)
 {
-    qDebug() << "CSV file succesfully parsed.";
-    qDebug() << "File path: " << srcPath;
-    qDebug() << "  * Total number of point lines: " << numOfLines;
-    qDebug() << "  * Points converted: " << convertedPts;
-    qDebug() << "  * Succesfull conversion: "
+    qInfo() << "CSV file succesfully parsed.";
+    qInfo() << "File path: " << srcPath;
+    qInfo() << "  * Total number of point lines: " << numOfLines;
+    qInfo() << "  * Points converted: " << convertedPts;
+    qInfo() << "  * Succesfull conversion: "
              << static_cast<double>(convertedPts) /
                 static_cast<double>(numOfLines) * 100
              << " %";
@@ -234,8 +257,8 @@ void conversionSuccessText
 
 
 void findColumnIndex
-    (const QString &line, const QString &searched,
-     int &index, const QString &delim)
+    (QString line, QString searched,
+     int &index, QString delim)
 {
     QStringList flList(line.split(delim));
     index = flList.indexOf(searched);
@@ -243,7 +266,7 @@ void findColumnIndex
 
 
 bool findCoordinateColumns
-    (const QString &firstLine, const QString &delim,
+    (QString firstLine, QString delim,
      int &xCol, int &yCol, int &zCol)
 {
     findColumnIndex(firstLine, "x", xCol, delim);
@@ -254,48 +277,54 @@ bool findCoordinateColumns
     if ( xCol == -1 ||
          yCol == -1 ||
          zCol == -1 )
+    {
         return false;
+    }
 
     return true;
 }
 
 
-bool openFile(const QString &filePath, QFile &file)
+bool openFile(QString filePath, QFile &file)
 {
     if ( filePath.isEmpty() )
     {
-        qDebug() << "ERROR: File path is empty string.";
+        qCritical() << "ERROR: File path is empty string.";
         return false;
     }
 
     file.setFileName(filePath);
     if ( !file.open(QIODevice::ReadOnly) )
     {
-        qDebug() << "ERROR: Could not find given file. "
-                    "File path given: " + filePath;
+        qCritical() << "ERROR: Could not find given file."
+                    << "File path given:" + filePath;
         return false;
-    } else
-    {
-        qDebug() << "Opened file to convert.";
-        return true;
     }
+
+    qInfo() << "Opened file to convert.";
+    return true;
 }
 
 
 bool columnError(QFile &file)
 {
-    qDebug() << "ERROR: Could not find column.";
+    qCritical() << "ERROR: Could not find column.";
     if ( file.isOpen() )
+    {
         file.close();
+    }
     return false;
 }
 
 
 bool emptyFileError(QFile &file)
 {
-    qDebug() << "ERROR: File is empty.";
+    qCritical() << "ERROR: File is empty.";
     if ( file.isOpen() )
+    {
         file.close();
+    }
+
     return false;
 }
 

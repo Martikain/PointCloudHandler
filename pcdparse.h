@@ -1,7 +1,7 @@
 #ifndef PCDPARSER_H
 #define PCDPARSER_H
 
-#include <QDebug>
+#include <QtDebug>
 #include <string>
 #include <QString>
 #include <QFile>
@@ -19,12 +19,12 @@ typedef pcl::PointCloud<pcl::PointXYZI> XYZICloud;
 
 
 bool CSVtoPCD
-        (XYZCloud &cloud, const QString &filePath,
-         const QString &delim);
+        (XYZCloud &cloud, QString filePath,
+         QString delim);
 
 bool CSVtoPCDwithIntensity
-        (XYZICloud &cloud, const QString &filePath,
-        const QString &delim, const QString &intensityID);
+        (XYZICloud &cloud, QString filePath,
+        QString delim, QString intensityID);
 
 
 
