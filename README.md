@@ -1,8 +1,9 @@
-# PointCloudHandler
+PointCloudHandler
+===================
 A command line project for basic point cloud operations such file conversion from
 CSV to PCD.
 
-Usage:
+## Usage:
 
 File conversion:
 
@@ -25,3 +26,5 @@ options for the command are
 			value in the destination PCD file.
 
 Example: ./PointCloudHandler convert -s /home/username/pointCloud.csv -d /home/username/pointCloud.pcd --delimiter ";" -i intensity
+
+---
