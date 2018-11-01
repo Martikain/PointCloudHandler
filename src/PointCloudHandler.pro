@@ -16,8 +16,8 @@ HEADERS += \
 
 
 INCLUDEPATH += $$(HOME)/eigen3
-INCLUDEPATH += /usr/include/pcl-1.8
-INCLUDEPATH += /usr/include/vtk-6.3
+INCLUDEPATH += /usr/include/pcl-1.7
+INCLUDEPATH += /usr/include/vtk-6.2
 INCLUDEPATH += /usr/include/boost
 
 LIBS += -lpcl_visualization -lpcl_common -lpcl_io -lboost_system
