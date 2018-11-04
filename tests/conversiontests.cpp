@@ -30,8 +30,9 @@ TEST (ConversionTest, SimpleSuccecss)
     cloudFilePath += "/outputs/simpleSuccess_ascii.pcd";
     pcl::io::loadPCDFile(cloudFilePath , outputCloud);
 
-    bool success = CSVtoPCDwithIntensity(inputCloud, inputFilePath,
-                                         TEST_DELIMITER, TEST_INTENSITY_ID);
+    bool success = CSVtoPCDwithIntensity
+            (inputCloud, inputFilePath,
+             TEST_DELIMITER, TEST_INTENSITY_ID);
 
     EXPECT_EQ(true, success);
 
@@ -49,5 +50,22 @@ TEST (ConversionTest, SimpleSuccecss)
 
         ASSERT_EQ(inputCloud.at(i), outputCloud.at(i));
     }
+}
+
+
+TEST (ConversionTest, EmptyFile)
+{
+    QString testDir = QDir::homePath();
+    testDir += "/PointCloudHandler/tests";
+
+    QString inputFilePath = testDir;
+    inputFilePath += "/inputs/emptyFile.csv";
+    pcl::PointCloud<pcl::PointXYZI> inputCloud;
+
+    bool success = CSVtoPCDwithIntensity
+            (inputCloud, inputFilePath,
+             TEST_DELIMITER, TEST_INTENSITY_ID);
+
+    EXPECT_EQ(false, success);
 }
 
