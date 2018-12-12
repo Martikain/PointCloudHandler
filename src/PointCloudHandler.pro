@@ -4,6 +4,8 @@ CONFIG += c++11 console
 CONFIG -= app_bundle
 
 DEFINES += QT_DEPRECATED_WARNINGS
+CONFIG += link_pkgconfig
+PKGCONFIG += eigen3
 
 SOURCES += \
         main.cpp \
@@ -15,7 +17,6 @@ HEADERS += \
     util.h
 
 
-INCLUDEPATH += $$(HOME)/eigen3
 INCLUDEPATH += /usr/include/pcl-1.7
 INCLUDEPATH += /usr/include/vtk-6.2
 INCLUDEPATH += /usr/include/boost
