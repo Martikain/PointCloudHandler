@@ -260,8 +260,20 @@ void findColumnIndex
     (QString line, QString searched,
      int &index, QString delim)
 {
+    line.replace("\"", "");
+
     QStringList flList(line.split(delim));
     index = flList.indexOf(searched);
+
+    if ( index == -1 )
+    {
+        index = flList.indexOf(searched.toUpper());
+    }
+
+    if ( index == -1 )
+    {
+        index = flList.indexOf(searched.toLower());
+    }
 }
 
 

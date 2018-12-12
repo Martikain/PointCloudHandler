@@ -102,6 +102,7 @@ int main(int argc, char *argv[])
 
     if ( posArgs.front().toUpper() == "CONVERT" )
     {
+        qInfo() << "Converting from " + source + " to " + dest;
         convert(source, dest, delim, intensityID, format);
     }
 
